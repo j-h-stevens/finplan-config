@@ -1,0 +1,20 @@
+version: "2024.1.0"
+date: "2026-04-04"
+type: feat
+affected_configs:
+  - tax_years/2024/federal_brackets.yaml
+  - tax_years/2024/irs_limits.yaml
+  - tax_years/2024/rmd_tables.yaml
+  - tax_years/2024/state_tax.yaml
+  - capital_market/exhibit17_10yr.yaml
+  - capital_market/exhibit17_20yr.yaml
+  - plan_defaults.yaml
+summary: >
+  Bootstrap change log for existing 2024 tax year configuration. Establishes the
+  cross-repo tracking system so finplan-compute-engine and finplan-api-gateway can
+  detect breaking changes programmatically.
+downstream_action_required: false
+notes: >
+  Downstream repos should import finplan_config.changelog and call
+  has_breaking_changes_since(PINNED_VERSION) on startup to detect incompatible
+  config upgrades before they affect live calculations.

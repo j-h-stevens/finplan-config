@@ -1,0 +1,14 @@
+version: "2024.2.0"
+date: "2026-04-04"
+type: security
+affected_configs: []
+summary: >
+  Build and security improvements: thread-safe ConfigRegistry singleton (double-checked
+  locking), year parameter bounds validation (1990-2100), pinned codecov action SHA,
+  uv dependency cache in CI, OIDC trusted publishing (eliminates PYPI_TOKEN secret),
+  functional data-correctness tests.
+downstream_action_required: false
+notes: >
+  No config data changed. ConfigRegistry.get() is now safe to call from multiple
+  threads concurrently. irs_limits(year=1800) now raises ValueError instead of
+  silently falling back.
