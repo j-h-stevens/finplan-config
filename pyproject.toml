@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finplan-config"
+version = "2024.1.0"
+description = "Shared configuration for finplan services (tax brackets, IRS limits, capital market assumptions)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "finplan team", email = "team@finplan.com" }]
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.urls]
+repository = "https://github.com/finplan/finplan-config"

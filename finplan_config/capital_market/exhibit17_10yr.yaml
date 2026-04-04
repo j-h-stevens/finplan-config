@@ -1,0 +1,135 @@
+# Exhibit 17 Capital Market Assumptions — 10-year horizon
+# Source: Institutional capital market assumptions (2024)
+# Returns in percent; volatility derived as sqrt(2*(arith - geom))
+
+inflation:
+  arithmetic: 0.0239
+  geometric: 0.0238
+
+asset_classes:
+  - name: "US Equity - Large Cap"
+    arithmetic_return: 7.67
+    geometric_return: 6.39
+    volatility: 0.1601
+  - name: "US Equity - Small/Mid Cap"
+    arithmetic_return: 8.87
+    geometric_return: 6.92
+    volatility: 0.1974
+  - name: "Non-US Equity - Developed"
+    arithmetic_return: 8.58
+    geometric_return: 7.03
+    volatility: 0.1760
+  - name: "Non-US Equity - Emerging"
+    arithmetic_return: 9.96
+    geometric_return: 7.38
+    volatility: 0.2271
+  - name: "US Corporate Bonds - Core"
+    arithmetic_return: 5.19
+    geometric_return: 5.00
+    volatility: 0.0616
+  - name: "US Corporate Bonds - Long Duration"
+    arithmetic_return: 5.61
+    geometric_return: 5.04
+    volatility: 0.1068
+  - name: "US Corporate Bonds - High Yield"
+    arithmetic_return: 6.44
+    geometric_return: 5.97
+    volatility: 0.0970
+  - name: "Non-US Debt - Developed"
+    arithmetic_return: 4.19
+    geometric_return: 3.89
+    volatility: 0.0775
+  - name: "Non-US Debt - Emerging"
+    arithmetic_return: 6.57
+    geometric_return: 6.03
+    volatility: 0.1040
+  - name: "US Treasuries (Cash Equivalents)"
+    arithmetic_return: 3.60
+    geometric_return: 3.58
+    volatility: 0.0200
+  - name: "TIPS (Inflation-Protected)"
+    arithmetic_return: 4.63
+    geometric_return: 4.44
+    volatility: 0.0616
+  - name: "Real Estate"
+    arithmetic_return: 7.52
+    geometric_return: 6.21
+    volatility: 0.1617
+  - name: "Hedge Funds"
+    arithmetic_return: 6.25
+    geometric_return: 5.92
+    volatility: 0.0812
+  - name: "Commodities"
+    arithmetic_return: 6.20
+    geometric_return: 4.67
+    volatility: 0.1749
+  - name: "Infrastructure"
+    arithmetic_return: 8.30
+    geometric_return: 7.22
+    volatility: 0.1470
+  - name: "Private Equity"
+    arithmetic_return: 11.51
+    geometric_return: 9.13
+    volatility: 0.2181
+  - name: "Private Debt"
+    arithmetic_return: 8.58
+    geometric_return: 7.91
+    volatility: 0.1157
+
+correlation_matrix:
+  #        USLg  USSm  IntD  EM    Core  LDur  HY    IntB  EMD   Cash  TIPS  RE    HF    Comm  Infr  PE    PD
+  - [1.00, 0.93, 0.80, 0.72, 0.02, -0.10, 0.55, 0.10, 0.50, -0.05, 0.10, 0.60, 0.70, 0.20, 0.55, 0.70, 0.50]
+  - [0.93, 1.00, 0.75, 0.70, 0.00, -0.12, 0.58, 0.08, 0.48, -0.05, 0.08, 0.65, 0.68, 0.22, 0.52, 0.75, 0.52]
+  - [0.80, 0.75, 1.00, 0.82, 0.05, -0.05, 0.50, 0.30, 0.55, 0.00, 0.12, 0.55, 0.65, 0.30, 0.60, 0.65, 0.45]
+  - [0.72, 0.70, 0.82, 1.00, 0.05, -0.05, 0.55, 0.25, 0.65, 0.00, 0.10, 0.50, 0.60, 0.35, 0.55, 0.60, 0.45]
+  - [0.02, 0.00, 0.05, 0.05, 1.00, 0.90, 0.35, 0.50, 0.40, 0.30, 0.65, -0.05, 0.10, -0.10, 0.10, 0.00, 0.30]
+  - [-0.10, -0.12, -0.05, -0.05, 0.90, 1.00, 0.20, 0.45, 0.30, 0.25, 0.60, -0.10, 0.05, -0.15, 0.05, -0.05, 0.20]
+  - [0.55, 0.58, 0.50, 0.55, 0.35, 0.20, 1.00, 0.20, 0.65, 0.10, 0.25, 0.40, 0.55, 0.25, 0.40, 0.55, 0.65]
+  - [0.10, 0.08, 0.30, 0.25, 0.50, 0.45, 0.20, 1.00, 0.45, 0.20, 0.40, 0.10, 0.20, 0.15, 0.20, 0.10, 0.25]
+  - [0.50, 0.48, 0.55, 0.65, 0.40, 0.30, 0.65, 0.45, 1.00, 0.15, 0.30, 0.35, 0.50, 0.30, 0.45, 0.50, 0.55]
+  - [-0.05, -0.05, 0.00, 0.00, 0.30, 0.25, 0.10, 0.20, 0.15, 1.00, 0.20, -0.05, 0.05, -0.05, 0.05, -0.05, 0.10]
+  - [0.10, 0.08, 0.12, 0.10, 0.65, 0.60, 0.25, 0.40, 0.30, 0.20, 1.00, 0.10, 0.15, 0.25, 0.15, 0.10, 0.20]
+  - [0.60, 0.65, 0.55, 0.50, -0.05, -0.10, 0.40, 0.10, 0.35, -0.05, 0.10, 1.00, 0.55, 0.20, 0.65, 0.60, 0.40]
+  - [0.70, 0.68, 0.65, 0.60, 0.10, 0.05, 0.55, 0.20, 0.50, 0.05, 0.15, 0.55, 1.00, 0.30, 0.55, 0.65, 0.50]
+  - [0.20, 0.22, 0.30, 0.35, -0.10, -0.15, 0.25, 0.15, 0.30, -0.05, 0.25, 0.20, 0.30, 1.00, 0.30, 0.25, 0.20]
+  - [0.55, 0.52, 0.60, 0.55, 0.10, 0.05, 0.40, 0.20, 0.45, 0.05, 0.15, 0.65, 0.55, 0.30, 1.00, 0.60, 0.45]
+  - [0.70, 0.75, 0.65, 0.60, 0.00, -0.05, 0.55, 0.10, 0.50, -0.05, 0.10, 0.60, 0.65, 0.25, 0.60, 1.00, 0.60]
+  - [0.50, 0.52, 0.45, 0.45, 0.30, 0.20, 0.65, 0.25, 0.55, 0.10, 0.20, 0.40, 0.50, 0.20, 0.45, 0.60, 1.00]
+
+allocations:
+  balanced:
+    - 0.20   # US Large Cap
+    - 0.08   # US Small/Mid
+    - 0.10   # Intl Dev
+    - 0.05   # EM Equity
+    - 0.12   # Core Bond
+    - 0.05   # Long Duration
+    - 0.04   # High Yield
+    - 0.03   # Intl Bond
+    - 0.03   # EM Debt
+    - 0.02   # Cash
+    - 0.05   # TIPS
+    - 0.08   # Real Estate
+    - 0.03   # Hedge Funds
+    - 0.02   # Commodities
+    - 0.04   # Infrastructure
+    - 0.04   # Private Equity
+    - 0.02   # Private Debt
+  aggressive:
+    - 0.30   # US Large Cap
+    - 0.12   # US Small/Mid
+    - 0.15   # Intl Dev
+    - 0.08   # EM Equity
+    - 0.05   # Core Bond
+    - 0.02   # Long Duration
+    - 0.03   # High Yield
+    - 0.02   # Intl Bond
+    - 0.02   # EM Debt
+    - 0.01   # Cash
+    - 0.02   # TIPS
+    - 0.05   # Real Estate
+    - 0.02   # Hedge Funds
+    - 0.02   # Commodities
+    - 0.03   # Infrastructure
+    - 0.04   # Private Equity
+    - 0.02   # Private Debt

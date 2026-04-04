@@ -1,0 +1,77 @@
+# Exhibit 17 Capital Market Assumptions — 20-year horizon
+# Source: Institutional capital market assumptions (2024)
+# Returns in percent; volatility derived as sqrt(2*(arith - geom))
+
+inflation:
+  arithmetic: 0.0239
+  geometric: 0.0238
+
+asset_classes:
+  - name: "US Equity - Large Cap"
+    arithmetic_return: 8.29
+    geometric_return: 7.00
+    volatility: 0.1606
+  - name: "US Equity - Small/Mid Cap"
+    arithmetic_return: 9.35
+    geometric_return: 7.38
+    volatility: 0.1985
+  - name: "Non-US Equity - Developed"
+    arithmetic_return: 8.96
+    geometric_return: 7.35
+    volatility: 0.1794
+  - name: "Non-US Equity - Emerging"
+    arithmetic_return: 10.63
+    geometric_return: 7.91
+    volatility: 0.2332
+  - name: "US Corporate Bonds - Core"
+    arithmetic_return: 5.28
+    geometric_return: 5.10
+    volatility: 0.0600
+  - name: "US Corporate Bonds - Long Duration"
+    arithmetic_return: 5.80
+    geometric_return: 5.28
+    volatility: 0.1019
+  - name: "US Corporate Bonds - High Yield"
+    arithmetic_return: 6.82
+    geometric_return: 6.33
+    volatility: 0.0989
+  - name: "Non-US Debt - Developed"
+    arithmetic_return: 4.29
+    geometric_return: 3.99
+    volatility: 0.0775
+  - name: "Non-US Debt - Emerging"
+    arithmetic_return: 6.87
+    geometric_return: 6.30
+    volatility: 0.1068
+  - name: "US Treasuries (Cash Equivalents)"
+    arithmetic_return: 3.61
+    geometric_return: 3.59
+    volatility: 0.0200
+  - name: "TIPS (Inflation-Protected)"
+    arithmetic_return: 4.61
+    geometric_return: 4.41
+    volatility: 0.0632
+  - name: "Real Estate"
+    arithmetic_return: 7.59
+    geometric_return: 6.38
+    volatility: 0.1556
+  - name: "Hedge Funds"
+    arithmetic_return: 6.57
+    geometric_return: 6.24
+    volatility: 0.0812
+  - name: "Commodities"
+    arithmetic_return: 6.37
+    geometric_return: 4.76
+    volatility: 0.1794
+  - name: "Infrastructure"
+    arithmetic_return: 8.65
+    geometric_return: 7.52
+    volatility: 0.1503
+  - name: "Private Equity"
+    arithmetic_return: 12.14
+    geometric_return: 9.63
+    volatility: 0.2240
+  - name: "Private Debt"
+    arithmetic_return: 8.71
+    geometric_return: 8.08
+    volatility: 0.1122

@@ -1,0 +1,96 @@
+# 2024 Federal income tax brackets, deductions, FICA, NIIT
+# Source: IRS Rev. Proc. 2023-34
+
+ordinary_income:
+  single:
+    - [0.0, 11600.0, 0.10]
+    - [11600.0, 47150.0, 0.12]
+    - [47150.0, 100525.0, 0.22]
+    - [100525.0, 191950.0, 0.24]
+    - [191950.0, 243725.0, 0.32]
+    - [243725.0, 609350.0, 0.35]
+    - [609350.0, .inf, 0.37]
+  married_filing_jointly:
+    - [0.0, 23200.0, 0.10]
+    - [23200.0, 94300.0, 0.12]
+    - [94300.0, 201050.0, 0.22]
+    - [201050.0, 383900.0, 0.24]
+    - [383900.0, 487450.0, 0.32]
+    - [487450.0, 731200.0, 0.35]
+    - [731200.0, .inf, 0.37]
+  married_filing_separately:
+    - [0.0, 11600.0, 0.10]
+    - [11600.0, 47150.0, 0.12]
+    - [47150.0, 100525.0, 0.22]
+    - [100525.0, 191950.0, 0.24]
+    - [191950.0, 243725.0, 0.32]
+    - [243725.0, 365600.0, 0.35]
+    - [365600.0, .inf, 0.37]
+  head_of_household:
+    - [0.0, 16550.0, 0.10]
+    - [16550.0, 63100.0, 0.12]
+    - [63100.0, 100500.0, 0.22]
+    - [100500.0, 191950.0, 0.24]
+    - [191950.0, 243700.0, 0.32]
+    - [243700.0, 609350.0, 0.35]
+    - [609350.0, .inf, 0.37]
+
+standard_deductions:
+  single: 14600.0
+  married_filing_jointly: 29200.0
+  married_filing_separately: 14600.0
+  head_of_household: 21900.0
+  additional_single: 1950.0
+  additional_married: 1550.0
+
+ltcg_qualified_dividends:
+  single:
+    - [0.0, 47025.0, 0.00]
+    - [47025.0, 518900.0, 0.15]
+    - [518900.0, .inf, 0.20]
+  married_filing_jointly:
+    - [0.0, 94050.0, 0.00]
+    - [94050.0, 583750.0, 0.15]
+    - [583750.0, .inf, 0.20]
+  married_filing_separately:
+    - [0.0, 47025.0, 0.00]
+    - [47025.0, 291850.0, 0.15]
+    - [291850.0, .inf, 0.20]
+  head_of_household:
+    - [0.0, 63000.0, 0.00]
+    - [63000.0, 551350.0, 0.15]
+    - [551350.0, .inf, 0.20]
+
+fica:
+  ss_wage_base: 168600.0
+  ss_rate_employee: 0.062
+  ss_rate_employer: 0.062
+  ss_rate_self_employed: 0.124
+  medicare_rate_employee: 0.0145
+  medicare_rate_employer: 0.0145
+  medicare_rate_self_employed: 0.029
+  additional_medicare_rate: 0.009
+  additional_medicare_thresholds:
+    single: 200000.0
+    head_of_household: 200000.0
+    married_filing_jointly: 250000.0
+    married_filing_separately: 125000.0
+
+niit:
+  rate: 0.038
+  thresholds:
+    single: 200000.0
+    married_filing_jointly: 250000.0
+    married_filing_separately: 125000.0
+    head_of_household: 200000.0
+
+social_security_provisional_income:
+  single: [25000.0, 34000.0]
+  head_of_household: [25000.0, 34000.0]
+  married_filing_separately: [25000.0, 34000.0]
+  married_filing_jointly: [32000.0, 44000.0]
+
+other:
+  salt_cap: 10000.0
+  estate_tax_exemption: 13610000.0
+  estate_tax_rate: 0.40

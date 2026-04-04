@@ -1,0 +1,48 @@
+# 2024 IRS contribution limits and thresholds
+# Source: IRS Rev. Proc. 2023-34, IRS Notice 2023-75
+
+age_thresholds:
+  catch_up_age: 50
+  rmd_start_age: 73
+
+ira:
+  limit: 7000.0
+  limit_over_50: 8000.0
+  catch_up: 1000.0
+
+traditional_401k:
+  limit: 23000.0
+  catch_up: 7500.0
+  limit_over_50: 30500.0
+  annual_additions_limit: 69000.0
+
+traditional_403b:
+  limit: 23000.0
+  catch_up: 7500.0
+  limit_over_50: 30500.0
+
+sep_ira:
+  limit: 69000.0
+  comp_cap: 345000.0
+
+simple_ira:
+  limit: 16000.0
+  catch_up: 3500.0
+  limit_over_50: 19500.0
+
+hsa:
+  limit_self: 4150.0
+  limit_family: 8300.0
+  catch_up: 1000.0
+  hdhp_min_deductible_self: 1600.0
+  hdhp_min_deductible_family: 3200.0
+  hdhp_max_oop_self: 8050.0
+  hdhp_max_oop_family: 16100.0
+
+gift_tax:
+  annual_exclusion: 18000.0
+  529_superfund_max: 90000.0
+
+social_security:
+  early_claiming_age: 62
+  max_claiming_age: 70

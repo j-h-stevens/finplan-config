@@ -1,0 +1,74 @@
+# Default assumptions and scenario parameters
+# Applied when not specified in request
+
+plan_assumptions:
+  inflation_rate: 0.03
+  pre_retirement_return: 0.07
+  post_retirement_return: 0.05
+  life_expectancy_client: 90
+  life_expectancy_co_client: 90
+  salary_growth_rate: 0.03
+  healthcare_inflation_rate: 0.06
+  education_inflation_rate: 0.05
+  monte_carlo_iterations: 1000
+  confidence_level: 0.85
+  projection_years: 30
+
+conversion_layer:
+  base_year: 2024
+  salary_growth: 0.03
+  employer_match_rate: 0.0
+  employer_match_cap: 0.0
+  qualified_fraction: 0.7
+  default_life_expectancy: 95
+  default_state: "TX"
+  default_expense_end_year: 2100
+  salt_cap: 10000.0
+  default_ss_claiming_age: 67
+
+monte_carlo:
+  default_trials: 1000
+  default_seed: null
+  pre_retirement_volatility: 0.16
+  post_retirement_volatility: 0.10
+  solver_trials: 500
+  solver_seed: 42
+  solver_tolerance: 0.01
+  solver_max_iterations: 20
+  comparison_simulations: 500
+
+scenario_defaults:
+  bear_market:
+    severity: -0.20
+    minimum_floor: -0.10
+
+  disability:
+    replacement_rate: 0.60
+
+  death:
+    final_expenses: 25000.0
+
+  heightened_inflation:
+    new_rate: 0.06
+
+  roth_conversion:
+    amount: 50000.0
+
+  stock_option_exercise:
+    proceeds: 100000.0
+    tax_cost_rate: 0.35
+
+  home_sale:
+    sale_price: 500000.0
+    cost_basis: 300000.0
+    selling_costs_rate: 0.06
+    section_121_exclusion_single: 250000.0
+    section_121_exclusion_mfj: 500000.0
+    ltcg_tax_rate: 0.20
+
+  inheritance:
+    amount: 200000.0
+
+  job_loss:
+    salary_recovery_rate: 0.90
+    unemployment_benefit: 0.0
