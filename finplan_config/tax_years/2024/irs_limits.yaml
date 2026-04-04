@@ -1,6 +1,12 @@
 # 2024 IRS contribution limits and thresholds
 # Source: IRS Rev. Proc. 2023-34, IRS Notice 2023-75
 
+_metadata:
+  source: "IRS Rev. Proc. 2023-34; IRS Notice 2023-75"
+  date_published: "2023-11-09"
+  entered_by: "team@finplan.com"
+  last_verified: "2026-04-04"
+
 age_thresholds:
   catch_up_age: 50
   rmd_start_age: 73

@@ -359,3 +359,185 @@ class TestChangelog:
     def test_has_breaking_changes_since_returns_false_for_current(self):
         from finplan_config.changelog import has_breaking_changes_since
         assert not has_breaking_changes_since("2023.0.0")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Thread safety
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+class TestThreadSafety:
+    def test_concurrent_get_creates_single_instance(self):
+        """50 threads calling ConfigRegistry.get() concurrently must all get
+        the same singleton instance — no duplicate initialisation."""
+        ConfigRegistry.reset()
+        instances = []
+        errors = []
+
+        def worker():
+            try:
+                instances.append(ConfigRegistry.get())
+            except Exception as e:
+                errors.append(e)
+
+        import threading
+        threads = [threading.Thread(target=worker) for _ in range(50)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors, f"Threads raised errors: {errors}"
+        assert len(instances) == 50
+        # All threads must have received the identical object
+        assert all(inst is instances[0] for inst in instances), (
+            "ConfigRegistry.get() returned different instances across threads"
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Plan defaults validation
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+class TestPlanDefaultsValidation:
+    def test_validate_all_includes_plan_defaults(self):
+        """validate_all() must pass for the bundled plan_defaults.yaml."""
+        from pathlib import Path
+        from finplan_config.validators import validate_all
+        config_dir = Path(__file__).parent.parent / "finplan_config"
+        # Should not raise
+        validate_all(config_dir)
+
+    def test_validate_plan_defaults_rejects_missing_section(self):
+        from finplan_config.validators import validate_plan_defaults, ConfigError
+        bad = {"plan_assumptions": {"inflation_rate": 0.03}, "monte_carlo": {"default_trials": 1000}}
+        with pytest.raises(ConfigError, match="missing required sections"):
+            validate_plan_defaults(bad)
+
+    def test_validate_plan_defaults_rejects_implausible_inflation(self):
+        from finplan_config.validators import validate_plan_defaults, ConfigError
+        bad = {
+            "plan_assumptions": {"inflation_rate": 5.0},  # 500% — implausible
+            "monte_carlo": {"default_trials": 1000},
+            "scenario_defaults": {},
+            "conversion_layer": {},
+        }
+        with pytest.raises(ConfigError, match="inflation_rate"):
+            validate_plan_defaults(bad)
+
+    def test_validate_plan_defaults_rejects_zero_trials(self):
+        from finplan_config.validators import validate_plan_defaults, ConfigError
+        bad = {
+            "plan_assumptions": {"inflation_rate": 0.03},
+            "monte_carlo": {"default_trials": 0},
+            "scenario_defaults": {},
+            "conversion_layer": {},
+        }
+        with pytest.raises(ConfigError, match="default_trials"):
+            validate_plan_defaults(bad)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Config manifest (audit trail)
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+class TestConfigManifest:
+    def test_manifest_has_required_keys(self, registry):
+        manifest = registry.config_manifest(year=2024)
+        for key in ("tax_year", "config_hash", "package_version", "generated_at"):
+            assert key in manifest, f"config_manifest missing key: {key}"
+
+    def test_manifest_hash_is_deterministic(self, registry):
+        m1 = registry.config_manifest(year=2024)
+        m2 = registry.config_manifest(year=2024)
+        assert m1["config_hash"] == m2["config_hash"]
+
+    def test_manifest_hash_is_16_hex_chars(self, registry):
+        h = registry.config_manifest(year=2024)["config_hash"]
+        assert len(h) == 16
+        assert all(c in "0123456789abcdef" for c in h)
+
+    def test_manifest_tax_year_matches_request(self, registry):
+        manifest = registry.config_manifest(year=2024)
+        assert manifest["tax_year"] == 2024
+
+    def test_manifest_generated_at_is_utc_iso(self, registry):
+        ts = registry.config_manifest(year=2024)["generated_at"]
+        assert ts.endswith("Z")
+        # Must parse without error
+        import datetime
+        datetime.datetime.fromisoformat(ts.rstrip("Z"))
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Staleness warning
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+class TestStalenessWarning:
+    def test_stale_warning_fires_when_year_is_behind(self):
+        """If current_year > latest_bundled_year, a UserWarning must be emitted."""
+        import datetime
+        import warnings
+        from finplan_config import _warn_if_stale
+        from pathlib import Path
+
+        config_dir = Path(__file__).parent.parent / "finplan_config"
+        current_year = datetime.date.today().year
+        latest_bundled = 2024  # only 2024 data is present
+
+        if current_year > latest_bundled:
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                _warn_if_stale(config_dir)
+            assert any(
+                issubclass(w.category, UserWarning) and "stale" in str(w.message).lower()
+                for w in caught
+            ), "Expected a UserWarning about stale config but none was raised"
+        else:
+            # No warning expected when running in 2024
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                _warn_if_stale(config_dir)
+            stale_warnings = [w for w in caught if "stale" in str(w.message).lower()]
+            assert not stale_warnings, "Unexpected stale warning for current year"
+
+    def test_no_warning_when_config_dir_has_no_tax_years(self, tmp_path):
+        """Missing tax_years dir must not crash — just returns silently."""
+        import warnings
+        from finplan_config import _warn_if_stale
+        (tmp_path / "tax_years").mkdir()
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            _warn_if_stale(tmp_path)
+        assert not caught
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# available_tax_years()
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+class TestAvailableTaxYears:
+    def test_returns_list_of_ints(self, registry):
+        years = registry.available_tax_years()
+        assert isinstance(years, list)
+        assert all(isinstance(y, int) for y in years)
+
+    def test_2024_is_present(self, registry):
+        assert 2024 in registry.available_tax_years()
+
+    def test_years_are_sorted(self, registry):
+        years = registry.available_tax_years()
+        assert years == sorted(years)
+
+    def test_empty_dir_returns_empty_list(self, tmp_path):
+        from finplan_config import ConfigRegistry
+        (tmp_path / "tax_years").mkdir()
+        (tmp_path / "capital_market").mkdir()
+        cr = ConfigRegistry.__new__(ConfigRegistry)
+        cr._config_dir = tmp_path
+        cr._default_year = 2024
+        assert cr.available_tax_years() == []

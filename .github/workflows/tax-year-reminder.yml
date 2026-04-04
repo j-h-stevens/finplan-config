@@ -1,0 +1,54 @@
+name: Tax Year Freshness Check
+
+# Runs automatically on January 1 each year to alert maintainers when a new
+# tax year's config files are missing, and on every push/PR so CI fails early
+# if the current calendar year has no bundled config.
+#
+# The January 1 run should be treated as a P0 alert: IRS limits for the new
+# tax year are usually published in October–November of the prior year (via
+# IRS Rev. Proc.), so the config update should land before December 31.
+
+on:
+  schedule:
+    # 09:00 UTC on January 1 — alerts maintainers at the start of each new year
+    - cron: "0 9 1 1 *"
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tax-year-freshness:
+    name: Verify current-year tax config exists
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check current tax year config is present
+        run: |
+          CURRENT_YEAR=$(date +%Y)
+          CONFIG_DIR="finplan_config/tax_years/$CURRENT_YEAR"
+
+          if [ -d "$CONFIG_DIR" ]; then
+            echo "✓ Tax year $CURRENT_YEAR config found at $CONFIG_DIR"
+          else
+            echo "::error file=finplan_config/tax_years::Tax year $CURRENT_YEAR config" \
+                 "is missing (expected: $CONFIG_DIR)."
+            echo ""
+            echo "Action required before April 15 of $CURRENT_YEAR:"
+            echo "  1. Obtain IRS Rev. Proc. for $CURRENT_YEAR (published Oct-Nov $(( CURRENT_YEAR - 1 )))"
+            echo "  2. Create finplan_config/tax_years/$CURRENT_YEAR/ with:"
+            echo "       federal_brackets.yaml, irs_limits.yaml, rmd_tables.yaml, state_tax.yaml"
+            echo "  3. Add a changes/ entry with type: data, downstream_action_required: true"
+            echo "  4. Bump version to $CURRENT_YEAR.1.0 in pyproject.toml"
+            echo "  5. Run: python scripts/aggregate_changelog.py"
+            exit 1
+          fi
+
+      - name: List available tax years
+        run: |
+          echo "Available tax years in this build:"
+          ls finplan_config/tax_years/ | sort

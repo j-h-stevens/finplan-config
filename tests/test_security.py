@@ -139,3 +139,29 @@ class TestConfigRegistryIsolation:
         # A year within the valid range but without config data falls back to 2024.
         data = cr.irs_limits(year=2025)
         assert "traditional_401k" in data
+
+
+class TestYearTypeEnforcement:
+    """year parameter must be an int — floats and strings must be rejected."""
+
+    def test_float_year_raises_type_error(self):
+        cr = ConfigRegistry.get()
+        with pytest.raises(TypeError, match="int"):
+            cr.irs_limits(year=2024.5)
+
+    def test_string_year_raises_type_error(self):
+        cr = ConfigRegistry.get()
+        with pytest.raises(TypeError, match="int"):
+            cr.irs_limits(year="2024")
+
+    def test_float_year_that_equals_int_is_still_rejected(self):
+        """2024.0 is a float, not an int — must be rejected even though value is exact."""
+        cr = ConfigRegistry.get()
+        with pytest.raises(TypeError, match="int"):
+            cr.irs_limits(year=2024.0)
+
+    def test_none_year_uses_default(self):
+        """None is explicitly allowed and selects the default year."""
+        cr = ConfigRegistry.get()
+        data = cr.irs_limits(year=None)
+        assert "traditional_401k" in data

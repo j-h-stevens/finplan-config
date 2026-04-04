@@ -13,11 +13,15 @@ the merge base of the PR (origin/main).
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
+
+# Only allow safe git ref characters — no spaces, semicolons, or shell metacharacters.
+_SAFE_REF_RE = re.compile(r"^[\w/.\-]+$")
 
 # Config directories that require a changelog entry when modified
 CONFIG_DIRS = ("finplan_config/tax_years", "finplan_config/capital_market")
@@ -28,6 +32,9 @@ CHANGES_DIR = REPO_ROOT / "changes"
 
 def _git_changed_files(base_ref: str = "origin/main") -> list[str]:
     """Return files changed relative to base_ref, or all tracked changes if unavailable."""
+    if not _SAFE_REF_RE.match(base_ref):
+        print(f"ERROR: base_ref {base_ref!r} contains invalid characters (expected {_SAFE_REF_RE.pattern})")
+        sys.exit(1)
     try:
         result = subprocess.run(
             ["git", "diff", "--name-only", base_ref, "HEAD"],

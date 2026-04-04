@@ -1,6 +1,12 @@
 # 50 states + DC income tax data (2024)
 # Source: State legislative websites, Tax Foundation
 
+_metadata:
+  source: "State legislative websites; Tax Foundation 2024 State Individual Income Tax Rates"
+  date_published: "2024-01-01"
+  entered_by: "team@finplan.com"
+  last_verified: "2026-04-04"
+
 # No income tax (9 states)
 AK: { type: none }
 FL: { type: none }
