@@ -117,7 +117,13 @@ jobs:
         run: uv build
 
       - name: Publish to PyPI
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
+          if [ -z "$PYPI_TOKEN" ]; then
+            echo "PYPI_TOKEN not configured — skipping publish"
+            exit 0
+          fi
           uv publish \
             --publish-url https://upload.pypi.org/legacy/ \
-            --token ${{ secrets.PYPI_TOKEN }}
+            --token "$PYPI_TOKEN"
