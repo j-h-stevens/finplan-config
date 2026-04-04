@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from pathlib import Path
 from typing import ClassVar
 
@@ -25,6 +26,11 @@ _INF = float("inf")
 
 # Expected subdirectories that must exist for a valid config directory.
 _REQUIRED_SUBDIRS = ("tax_years", "capital_market")
+
+# Year range guard — catches obviously wrong inputs (e.g. year=1800, year=9999)
+# before they silently fall back to the default year.
+_MIN_VALID_YEAR = 1990
+_MAX_VALID_YEAR = 2100
 
 
 def _validated_config_dir(path: Path) -> Path:
@@ -93,11 +99,13 @@ def _state_tax_tuple(entry: dict) -> tuple:
 class ConfigRegistry:
     """Singleton that loads and caches YAML configuration.
 
-    Thread-safe: the registry is written once during ``initialize()``; all
-    subsequent access is read-only on immutable data (dicts + numpy arrays).
+    Thread-safe: a class-level lock guards singleton creation via double-checked
+    locking. After ``initialize()`` completes, all access is read-only on
+    immutable data (dicts + numpy arrays).
     """
 
     _instance: ClassVar[ConfigRegistry | None] = None
+    _lock: ClassVar[threading.Lock] = threading.Lock()
     _config_dir: Path
     _default_year: int
 
@@ -140,32 +148,53 @@ class ConfigRegistry:
                 config_dir = _validated_config_dir(Path(env_dir))
             else:
                 config_dir = Path(__file__).parent
-        cls._instance = cls(config_dir, default_year)
+        instance = cls(config_dir, default_year)
         if validate:
             validate_all(config_dir, default_year)
-        return cls._instance
+        # Assign without acquiring _lock: callers that need thread safety (get())
+        # already hold the lock before calling initialize().  Explicit direct calls
+        # to initialize() are expected to run before concurrent access begins.
+        cls._instance = instance
+        return instance
 
     @classmethod
     def get(cls) -> "ConfigRegistry":
-        """Return the singleton, lazy-initializing if necessary."""
+        """Return the singleton, lazy-initializing if necessary.
+
+        Uses double-checked locking so concurrent callers never create more
+        than one instance.
+        """
         if cls._instance is None:
-            cls.initialize()
-        return cls._instance
+            with cls._lock:
+                if cls._instance is None:
+                    cls.initialize()
+        return cls._instance  # type: ignore[return-value]
 
     @classmethod
     def reset(cls) -> None:
         """Reset the singleton (for testing)."""
-        cls._instance = None
+        with cls._lock:
+            cls._instance = None
 
     # ------------------------------------------------------------------
     # Year resolution
     # ------------------------------------------------------------------
 
     def _resolve_year(self, year: int | None) -> int:
-        """Return the requested year, or the default year."""
-        if year is not None:
-            return year
-        return self._default_year
+        """Return the requested year, or the default year.
+
+        Raises ``ValueError`` for years outside the supported range
+        ``[_MIN_VALID_YEAR, _MAX_VALID_YEAR]`` to surface obviously wrong inputs
+        early rather than silently falling back to the default year.
+        """
+        if year is None:
+            return self._default_year
+        if not (_MIN_VALID_YEAR <= year <= _MAX_VALID_YEAR):
+            raise ValueError(
+                f"Tax year {year} is outside the supported range "
+                f"[{_MIN_VALID_YEAR}, {_MAX_VALID_YEAR}]"
+            )
+        return year
 
     def _year_dir(self, year: int) -> Path:
         """Return the directory for a tax year, falling back to nearest available."""

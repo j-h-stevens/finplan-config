@@ -123,9 +123,19 @@ class TestConfigRegistryIsolation:
         assert limits["traditional_401k"]["limit"] > 0
 
     def test_year_fallback_does_not_expose_arbitrary_paths(self, monkeypatch):
-        """Year resolution falls back to default year — not to arbitrary filesystem."""
+        """Year resolution does not expose arbitrary filesystem paths.
+
+        Out-of-range years (e.g. 9999) are rejected with ValueError rather than
+        silently falling back, which is a stronger guarantee than the original
+        fallback behavior.  Near-future years within the valid range fall back
+        to the default year without filesystem exposure.
+        """
         cr = ConfigRegistry.get()
-        # Requesting a far-future year should fall back to 2024, not error with
-        # a path that could be influenced by input
-        data = cr.irs_limits(year=9999)
+        # Far-future year outside valid range raises ValueError (not FileNotFoundError
+        # with a user-influenced path).
+        with pytest.raises(ValueError, match="supported range"):
+            cr.irs_limits(year=9999)
+
+        # A year within the valid range but without config data falls back to 2024.
+        data = cr.irs_limits(year=2025)
         assert "traditional_401k" in data
