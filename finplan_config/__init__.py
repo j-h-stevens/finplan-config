@@ -23,6 +23,38 @@ logger = logging.getLogger(__name__)
 
 _INF = float("inf")
 
+# Expected subdirectories that must exist for a valid config directory.
+_REQUIRED_SUBDIRS = ("tax_years", "capital_market")
+
+
+def _validated_config_dir(path: Path) -> Path:
+    """Resolve and validate a config directory path from FINPLAN_CONFIG_DIR.
+
+    Guards against path traversal: the resolved path must be an existing
+    directory that contains the expected finplan config structure.
+
+    Raises ValueError for any suspicious or invalid path.
+    """
+    try:
+        resolved = path.resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise ValueError(
+            f"FINPLAN_CONFIG_DIR={path!r} does not exist or cannot be resolved: {exc}"
+        ) from exc
+
+    if not resolved.is_dir():
+        raise ValueError(f"FINPLAN_CONFIG_DIR={resolved!r} is not a directory")
+
+    # Verify the directory looks like a finplan config tree (not an arbitrary path).
+    missing = [sub for sub in _REQUIRED_SUBDIRS if not (resolved / sub).is_dir()]
+    if missing:
+        raise ValueError(
+            f"FINPLAN_CONFIG_DIR={resolved!r} is missing expected subdirectories: "
+            f"{missing}. Is this a valid finplan config directory?"
+        )
+
+    return resolved
+
 # Sentinel so we don't confuse "not loaded" with "loaded but empty"
 _NOT_LOADED = object()
 
@@ -104,7 +136,7 @@ class ConfigRegistry:
         if config_dir is None:
             env_dir = os.environ.get("FINPLAN_CONFIG_DIR")
             if env_dir:
-                config_dir = Path(env_dir)
+                config_dir = _validated_config_dir(Path(env_dir))
             else:
                 config_dir = Path(__file__).parent
         cls._instance = cls(config_dir, default_year)
