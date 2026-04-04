@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - run: uv sync --frozen
+      - run: uv sync --frozen --extra dev
 
       - name: Validate YAML files
         run: |
@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - run: uv sync --frozen
+      - run: uv sync --frozen --extra dev
       - run: uv run ruff check . --output-format=github
       - run: uv run ruff format --check .
 
@@ -74,7 +74,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: uv sync --frozen
+      - run: uv sync --frozen --extra dev
 
       - name: Run tests with coverage
         run: |
@@ -110,7 +110,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - run: uv sync --frozen
+      - run: uv sync --frozen --extra dev
 
       - name: Build distribution
         run: uv build
