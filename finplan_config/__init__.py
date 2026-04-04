@@ -55,6 +55,7 @@ def _validated_config_dir(path: Path) -> Path:
 
     return resolved
 
+
 # Sentinel so we don't confuse "not loaded" with "loaded but empty"
 _NOT_LOADED = object()
 

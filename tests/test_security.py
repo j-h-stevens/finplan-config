@@ -82,9 +82,7 @@ class TestYAMLSafety:
 
         malicious_yaml = tmp_path / "tax_years" / "2024" / "irs_limits.yaml"
         # yaml.load() with Loader=Loader would execute this; safe_load raises
-        malicious_yaml.write_text(
-            "!!python/object/apply:os.system ['echo pwned']"
-        )
+        malicious_yaml.write_text("!!python/object/apply:os.system ['echo pwned']")
 
         from finplan_config import _yaml_load
         import yaml

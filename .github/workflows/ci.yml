@@ -30,8 +30,9 @@ jobs:
       - name: Validate YAML files
         run: |
           python -c "
+          from pathlib import Path
           from finplan_config.validators import validate_all
-          validate_all()
+          validate_all(Path('finplan_config'))
           print('✓ All YAML files validated successfully')
           "
 
