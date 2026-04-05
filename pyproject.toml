@@ -28,3 +28,10 @@ include = ["finplan_config*"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    # The stale-config UserWarning is expected in tests: we only ship 2024 data
+    # so any test calling ConfigRegistry.get() in a year > 2024 will trigger it.
+    # The warning uses stacklevel=4 so it is attributed to the caller (test code),
+    # not to finplan_config itself — hence matching on message, not module.
+    "ignore:finplan-config.*stale config:UserWarning",
+]
