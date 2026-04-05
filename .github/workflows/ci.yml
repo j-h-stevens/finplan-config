@@ -70,7 +70,6 @@ jobs:
   # ─────────────────────────────────────────────────────────────────
   test:
     name: Tests
-    needs: [validate, lint]
     runs-on: ubuntu-latest
     permissions:
       contents: read
