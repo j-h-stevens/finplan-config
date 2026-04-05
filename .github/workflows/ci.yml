@@ -69,7 +69,7 @@ jobs:
   # Stage 3: Tests (Python 3.12 + 3.13)
   # ─────────────────────────────────────────────────────────────────
   run-tests:
-    name: Tests
+    name: Run Test Suite
     runs-on: ubuntu-latest
     permissions:
       contents: read
