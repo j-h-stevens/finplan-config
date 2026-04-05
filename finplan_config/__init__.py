@@ -447,5 +447,7 @@ class ConfigRegistry:
             "tax_year": yr,
             "config_hash": config_hash,
             "package_version": _get_package_version(),
-            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+            "generated_at": datetime.datetime.now(datetime.timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z"),
         }
