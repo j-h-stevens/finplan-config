@@ -124,15 +124,24 @@ def validate_allocation_weights(weights: list, name: str) -> None:
 
 def validate_plan_defaults(data: dict) -> None:
     """Validate plan_defaults.yaml structure and key assumption ranges."""
-    required_sections = {"plan_assumptions", "monte_carlo", "scenario_defaults", "conversion_layer"}
+    required_sections = {
+        "plan_assumptions",
+        "monte_carlo",
+        "scenario_defaults",
+        "conversion_layer",
+    }
     missing = required_sections - data.keys()
     if missing:
-        raise ConfigError(f"plan_defaults.yaml missing required sections: {sorted(missing)}")
+        raise ConfigError(
+            f"plan_defaults.yaml missing required sections: {sorted(missing)}"
+        )
 
     assumptions = data["plan_assumptions"]
     rate = assumptions.get("inflation_rate")
     if rate is None:
-        raise ConfigError("plan_defaults.yaml plan_assumptions.inflation_rate is missing")
+        raise ConfigError(
+            "plan_defaults.yaml plan_assumptions.inflation_rate is missing"
+        )
     if not (0 < rate < 0.5):
         raise ConfigError(
             f"plan_defaults.yaml plan_assumptions.inflation_rate={rate} is implausible "
@@ -172,7 +181,9 @@ def validate_metadata(data: dict, filename: str) -> None:
         return
 
     if not isinstance(meta, dict):
-        raise ConfigError(f"{filename} _metadata must be a mapping, got {type(meta).__name__}")
+        raise ConfigError(
+            f"{filename} _metadata must be a mapping, got {type(meta).__name__}"
+        )
 
     # Validate date fields are ISO-format strings (YYYY-MM-DD)
     iso_date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")

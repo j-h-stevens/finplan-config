@@ -65,8 +65,18 @@ class TestIRSLimits:
 # ──────────────────────────────────────────────────────────────────────────────
 
 FILING_STATUSES = {
-    "ordinary": {"single", "married_filing_jointly", "married_filing_separately", "head_of_household"},
-    "ltcg": {"single", "married_filing_jointly", "married_filing_separately", "head_of_household"},
+    "ordinary": {
+        "single",
+        "married_filing_jointly",
+        "married_filing_separately",
+        "head_of_household",
+    },
+    "ltcg": {
+        "single",
+        "married_filing_jointly",
+        "married_filing_separately",
+        "head_of_household",
+    },
 }
 
 
@@ -131,11 +141,57 @@ class TestFederalBrackets:
 
 # All 50 states + DC
 _ALL_STATE_CODES = {
-    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL",
-    "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME",
-    "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
-    "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI",
-    "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+    "AL",
+    "AK",
+    "AZ",
+    "AR",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "DC",
+    "FL",
+    "GA",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "IA",
+    "KS",
+    "KY",
+    "LA",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "MN",
+    "MS",
+    "MO",
+    "MT",
+    "NE",
+    "NV",
+    "NH",
+    "NJ",
+    "NM",
+    "NY",
+    "NC",
+    "ND",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VT",
+    "VA",
+    "WA",
+    "WV",
+    "WI",
+    "WY",
 }
 
 
@@ -279,7 +335,12 @@ class TestCapitalMarket:
 class TestPlanDefaults:
     def test_required_sections_present(self, registry):
         defaults = registry.plan_defaults()
-        required = {"plan_assumptions", "monte_carlo", "scenario_defaults", "conversion_layer"}
+        required = {
+            "plan_assumptions",
+            "monte_carlo",
+            "scenario_defaults",
+            "conversion_layer",
+        }
         missing = required - defaults.keys()
         assert not missing, f"plan_defaults missing sections: {missing}"
 
@@ -340,17 +401,20 @@ class TestYearValidation:
 class TestChangelog:
     def test_changes_log_yaml_parseable(self):
         from finplan_config.changelog import _load_log
+
         entries = _load_log()
         assert isinstance(entries, list)
         assert len(entries) > 0
 
     def test_get_changes_since_older_version_returns_entries(self):
         from finplan_config.changelog import get_changes_since
+
         entries = get_changes_since("2023.0.0")
         assert len(entries) > 0
 
     def test_get_changes_since_latest_returns_empty(self):
         from finplan_config.changelog import get_changes_since, _load_log
+
         entries = _load_log()
         latest = max(e["version"] for e in entries)
         result = get_changes_since(latest)
@@ -358,6 +422,7 @@ class TestChangelog:
 
     def test_has_breaking_changes_since_returns_false_for_current(self):
         from finplan_config.changelog import has_breaking_changes_since
+
         assert not has_breaking_changes_since("2023.0.0")
 
 
@@ -381,6 +446,7 @@ class TestThreadSafety:
                 errors.append(e)
 
         import threading
+
         threads = [threading.Thread(target=worker) for _ in range(50)]
         for t in threads:
             t.start()
@@ -405,18 +471,24 @@ class TestPlanDefaultsValidation:
         """validate_all() must pass for the bundled plan_defaults.yaml."""
         from pathlib import Path
         from finplan_config.validators import validate_all
+
         config_dir = Path(__file__).parent.parent / "finplan_config"
         # Should not raise
         validate_all(config_dir)
 
     def test_validate_plan_defaults_rejects_missing_section(self):
         from finplan_config.validators import validate_plan_defaults, ConfigError
-        bad = {"plan_assumptions": {"inflation_rate": 0.03}, "monte_carlo": {"default_trials": 1000}}
+
+        bad = {
+            "plan_assumptions": {"inflation_rate": 0.03},
+            "monte_carlo": {"default_trials": 1000},
+        }
         with pytest.raises(ConfigError, match="missing required sections"):
             validate_plan_defaults(bad)
 
     def test_validate_plan_defaults_rejects_implausible_inflation(self):
         from finplan_config.validators import validate_plan_defaults, ConfigError
+
         bad = {
             "plan_assumptions": {"inflation_rate": 5.0},  # 500% — implausible
             "monte_carlo": {"default_trials": 1000},
@@ -428,6 +500,7 @@ class TestPlanDefaultsValidation:
 
     def test_validate_plan_defaults_rejects_zero_trials(self):
         from finplan_config.validators import validate_plan_defaults, ConfigError
+
         bad = {
             "plan_assumptions": {"inflation_rate": 0.03},
             "monte_carlo": {"default_trials": 0},
@@ -468,6 +541,7 @@ class TestConfigManifest:
         assert ts.endswith("Z")
         # Must parse without error
         import datetime
+
         datetime.datetime.fromisoformat(ts.rstrip("Z"))
 
 
@@ -493,7 +567,8 @@ class TestStalenessWarning:
                 warnings.simplefilter("always")
                 _warn_if_stale(config_dir)
             assert any(
-                issubclass(w.category, UserWarning) and "stale" in str(w.message).lower()
+                issubclass(w.category, UserWarning)
+                and "stale" in str(w.message).lower()
                 for w in caught
             ), "Expected a UserWarning about stale config but none was raised"
         else:
@@ -508,6 +583,7 @@ class TestStalenessWarning:
         """Missing tax_years dir must not crash — just returns silently."""
         import warnings
         from finplan_config import _warn_if_stale
+
         (tmp_path / "tax_years").mkdir()
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -535,6 +611,7 @@ class TestAvailableTaxYears:
 
     def test_empty_dir_returns_empty_list(self, tmp_path):
         from finplan_config import ConfigRegistry
+
         (tmp_path / "tax_years").mkdir()
         (tmp_path / "capital_market").mkdir()
         cr = ConfigRegistry.__new__(ConfigRegistry)

@@ -33,7 +33,9 @@ CHANGES_DIR = REPO_ROOT / "changes"
 def _git_changed_files(base_ref: str = "origin/main") -> list[str]:
     """Return files changed relative to base_ref, or all tracked changes if unavailable."""
     if not _SAFE_REF_RE.match(base_ref):
-        print(f"ERROR: base_ref {base_ref!r} contains invalid characters (expected {_SAFE_REF_RE.pattern})")
+        print(
+            f"ERROR: base_ref {base_ref!r} contains invalid characters (expected {_SAFE_REF_RE.pattern})"
+        )
         sys.exit(1)
     try:
         result = subprocess.run(
@@ -58,8 +60,7 @@ def _git_changed_files(base_ref: str = "origin/main") -> list[str]:
 def _is_config_file(path: str) -> bool:
     p = Path(path)
     return (
-        any(str(p).startswith(d) for d in CONFIG_DIRS)
-        and p.suffix in CONFIG_SUFFIXES
+        any(str(p).startswith(d) for d in CONFIG_DIRS) and p.suffix in CONFIG_SUFFIXES
     )
 
 

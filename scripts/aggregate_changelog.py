@@ -21,13 +21,13 @@ OUTPUT = REPO_ROOT / "changes_log.yaml"
 
 # All recognised change types.  Extend this set when adding new types.
 VALID_CHANGE_TYPES = {
-    "data",        # Updated values, same YAML structure (safe to consume)
-    "feat",        # New config file or new ConfigRegistry method
-    "fix",         # Bug fix — no structural change
+    "data",  # Updated values, same YAML structure (safe to consume)
+    "feat",  # New config file or new ConfigRegistry method
+    "fix",  # Bug fix — no structural change
     "api_change",  # ConfigRegistry method signature or return shape changed
-    "removal",     # Removed a config key or method (BREAKING)
-    "security",    # Security patch
-    "breaking",    # Catch-all explicit breaking change
+    "removal",  # Removed a config key or method (BREAKING)
+    "security",  # Security patch
+    "breaking",  # Catch-all explicit breaking change
 }
 
 HEADER = """\
@@ -69,7 +69,9 @@ def main() -> int:
             return 1
 
         if not isinstance(entry, dict):
-            print(f"ERROR: {path.name} did not parse as a YAML mapping — skipping is not safe")
+            print(
+                f"ERROR: {path.name} did not parse as a YAML mapping — skipping is not safe"
+            )
             return 1
 
         # Validate required fields
@@ -103,7 +105,9 @@ def main() -> int:
     entries.sort(key=lambda e: (str(e["date"]), str(e["version"])))
 
     document = {"schema_version": 1, "entries": entries}
-    yaml_text = yaml.dump(document, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    yaml_text = yaml.dump(
+        document, default_flow_style=False, allow_unicode=True, sort_keys=False
+    )
 
     OUTPUT.write_text(HEADER + yaml_text, encoding="utf-8")
     print(f"Wrote {len(entries)} entries to {OUTPUT.relative_to(REPO_ROOT)}")

@@ -1,16 +1,17 @@
 name: Tax Year Freshness Check
 
-# Runs automatically on January 1 each year to alert maintainers when a new
-# tax year's config files are missing, and on every push/PR so CI fails early
-# if the current calendar year has no bundled config.
+# Scheduled run (Jan 1): FAILS if current-year config is missing — treated as
+# a P0 alert requiring action before April 15.
 #
-# The January 1 run should be treated as a P0 alert: IRS limits for the new
-# tax year are usually published in October–November of the prior year (via
-# IRS Rev. Proc.), so the config update should land before December 31.
+# Push/PR runs: WARNS (annotation) but does NOT fail so stale data doesn't
+# block unrelated PRs.  The scheduled job is the enforcement gate.
+#
+# The IRS Rev. Proc. for year N is typically published in Oct–Nov of year N-1,
+# so the config update should land before Dec 31 of the prior year.
 
 on:
   schedule:
-    # 09:00 UTC on January 1 — alerts maintainers at the start of each new year
+    # 09:00 UTC on January 1 — hard failure alert for the new year
     - cron: "0 9 1 1 *"
   push:
     branches: [main]
@@ -32,23 +33,28 @@ jobs:
           CURRENT_YEAR=$(date +%Y)
           CONFIG_DIR="finplan_config/tax_years/$CURRENT_YEAR"
 
+          echo "Available tax years:"
+          ls finplan_config/tax_years/ | sort
+
           if [ -d "$CONFIG_DIR" ]; then
             echo "✓ Tax year $CURRENT_YEAR config found at $CONFIG_DIR"
           else
-            echo "::error file=finplan_config/tax_years::Tax year $CURRENT_YEAR config" \
-                 "is missing (expected: $CONFIG_DIR)."
-            echo ""
-            echo "Action required before April 15 of $CURRENT_YEAR:"
-            echo "  1. Obtain IRS Rev. Proc. for $CURRENT_YEAR (published Oct-Nov $(( CURRENT_YEAR - 1 )))"
-            echo "  2. Create finplan_config/tax_years/$CURRENT_YEAR/ with:"
-            echo "       federal_brackets.yaml, irs_limits.yaml, rmd_tables.yaml, state_tax.yaml"
-            echo "  3. Add a changes/ entry with type: data, downstream_action_required: true"
-            echo "  4. Bump version to $CURRENT_YEAR.1.0 in pyproject.toml"
-            echo "  5. Run: python scripts/aggregate_changelog.py"
-            exit 1
+            # On the scheduled Jan 1 run: hard failure (P0 alert)
+            # On push/PR: annotation only — don't block unrelated changes
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              echo "::error file=finplan_config/tax_years::Tax year $CURRENT_YEAR config is missing."
+              echo ""
+              echo "P0 ACTION REQUIRED before April 15 of $CURRENT_YEAR:"
+              echo "  1. Obtain IRS Rev. Proc. for $CURRENT_YEAR (published Oct-Nov $(( CURRENT_YEAR - 1 )))"
+              echo "  2. Create finplan_config/tax_years/$CURRENT_YEAR/ with:"
+              echo "       federal_brackets.yaml, irs_limits.yaml, rmd_tables.yaml, state_tax.yaml"
+              echo "  3. Add a changes/ entry: type: data, downstream_action_required: true"
+              echo "  4. Bump version to $CURRENT_YEAR.1.0 in pyproject.toml"
+              echo "  5. Run: python scripts/aggregate_changelog.py"
+              exit 1
+            else
+              echo "::warning file=finplan_config/tax_years::Tax year $CURRENT_YEAR config" \
+                   "is missing — action required before April 15, $CURRENT_YEAR."
+              echo "See .github/workflows/tax-year-reminder.yml for update instructions."
+            fi
           fi
-
-      - name: List available tax years
-        run: |
-          echo "Available tax years in this build:"
-          ls finplan_config/tax_years/ | sort

@@ -37,7 +37,9 @@ _SEVERITY_ORDER = ["feat", "fix", "data", "security", "breaking"]
 _MAX_VERSION_LEN = 50
 
 
-def _pad_parts(a: tuple[int, ...], b: tuple[int, ...]) -> tuple[tuple[int, ...], tuple[int, ...]]:
+def _pad_parts(
+    a: tuple[int, ...], b: tuple[int, ...]
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
     """Pad the shorter tuple with trailing zeros so comparisons are length-neutral.
 
     Without this, ``(2024, 1) < (2024, 1, 0)`` would return ``True`` in Python

@@ -8,7 +8,6 @@ Covers:
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -90,7 +89,9 @@ class TestVersionComparator:
 class TestChangeLogRobustness:
     def test_missing_log_returns_empty_list(self):
         """If changes_log.yaml doesn't exist, _load_log() returns [] — no exception."""
-        with patch("finplan_config.changelog._CHANGES_LOG_PATH", Path("/nonexistent/path.yaml")):
+        with patch(
+            "finplan_config.changelog._CHANGES_LOG_PATH", Path("/nonexistent/path.yaml")
+        ):
             result = _load_log()
         assert result == []
 
@@ -112,11 +113,15 @@ class TestChangeLogRobustness:
 
     def test_get_changes_since_with_missing_log_returns_empty(self):
         """get_changes_since() on a missing log is safe — returns []."""
-        with patch("finplan_config.changelog._CHANGES_LOG_PATH", Path("/nonexistent/path.yaml")):
+        with patch(
+            "finplan_config.changelog._CHANGES_LOG_PATH", Path("/nonexistent/path.yaml")
+        ):
             result = get_changes_since("2024.1.0")
         assert result == []
 
     def test_has_breaking_changes_with_missing_log_returns_false(self):
         """has_breaking_changes_since() on a missing log returns False safely."""
-        with patch("finplan_config.changelog._CHANGES_LOG_PATH", Path("/nonexistent/path.yaml")):
+        with patch(
+            "finplan_config.changelog._CHANGES_LOG_PATH", Path("/nonexistent/path.yaml")
+        ):
             assert not has_breaking_changes_since("2024.1.0")

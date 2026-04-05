@@ -41,6 +41,7 @@ def _get_package_version() -> str:
     """Return the installed package version string, or 'unknown'."""
     try:
         from importlib.metadata import version
+
         return version("finplan-config")
     except Exception:
         return "unknown"
@@ -85,7 +86,9 @@ def _warn_if_stale(config_dir: Path) -> None:
     current_year = datetime.date.today().year
     tax_dir = config_dir / "tax_years"
     try:
-        available = [int(d.name) for d in tax_dir.iterdir() if d.is_dir() and d.name.isdigit()]
+        available = [
+            int(d.name) for d in tax_dir.iterdir() if d.is_dir() and d.name.isdigit()
+        ]
     except OSError:
         return
     if not available:
@@ -230,9 +233,7 @@ class ConfigRegistry:
         if year is None:
             return self._default_year
         if not isinstance(year, int):
-            raise TypeError(
-                f"year must be an int or None, got {type(year).__name__!r}"
-            )
+            raise TypeError(f"year must be an int or None, got {type(year).__name__!r}")
         if not (_MIN_VALID_YEAR <= year <= _MAX_VALID_YEAR):
             raise ValueError(
                 f"Tax year {year} is outside the supported range "
@@ -274,7 +275,9 @@ class ConfigRegistry:
         tax_dir = self._config_dir / "tax_years"
         try:
             return sorted(
-                int(d.name) for d in tax_dir.iterdir() if d.is_dir() and d.name.isdigit()
+                int(d.name)
+                for d in tax_dir.iterdir()
+                if d.is_dir() and d.name.isdigit()
             )
         except OSError:
             return []
