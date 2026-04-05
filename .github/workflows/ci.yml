@@ -44,13 +44,6 @@ jobs:
       - name: Quality checks
         run: bash scripts/run_checks.sh
 
-      - name: Upload coverage
-        if: always()
-        uses: codecov/codecov-action@13afa45a3c30746b769ddb0ee18e7ac89fdb3e45 # v4.6.0
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-
       - name: Check changelog updated (PR only)
         if: github.event_name == 'pull_request'
         run: python scripts/check_changelog_updated.py
