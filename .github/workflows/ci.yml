@@ -74,6 +74,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    # Override any runner-level PYTHONWARNINGS=error that would convert
+    # expected UserWarnings (e.g. stale-config) to exceptions.
+    env:
+      PYTHONWARNINGS: default
     strategy:
       fail-fast: false
       matrix:
@@ -93,7 +97,7 @@ jobs:
           uv python list
 
       - name: Install dependencies
-        run: PYTHONWARNINGS=default uv sync --frozen --extra dev
+        run: uv sync --frozen --extra dev
 
       - name: Run tests with coverage
         run: |
