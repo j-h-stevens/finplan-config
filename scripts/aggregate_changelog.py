@@ -9,6 +9,7 @@ This rewrites changes_log.yaml with all entries sorted by (date, version).
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -17,6 +18,17 @@ import yaml
 REPO_ROOT = Path(__file__).parent.parent
 CHANGES_DIR = REPO_ROOT / "changes"
 OUTPUT = REPO_ROOT / "changes_log.yaml"
+
+# All recognised change types.  Extend this set when adding new types.
+VALID_CHANGE_TYPES = {
+    "data",  # Updated values, same YAML structure (safe to consume)
+    "feat",  # New config file or new ConfigRegistry method
+    "fix",  # Bug fix — no structural change
+    "api_change",  # ConfigRegistry method signature or return shape changed
+    "removal",  # Removed a config key or method (BREAKING)
+    "security",  # Security patch
+    "breaking",  # Catch-all explicit breaking change
+}
 
 HEADER = """\
 # finplan-config change log
@@ -34,6 +46,9 @@ HEADER = """\
 
 """
 
+# Simple CalVer / SemVer pattern (e.g. "2024.1.0", "1.2.3")
+_VERSION_RE = re.compile(r"^\d+(\.\d+)*$")
+
 
 def main() -> int:
     entry_files = sorted(CHANGES_DIR.glob("*.yaml"))
@@ -43,16 +58,43 @@ def main() -> int:
 
     entries = []
     for path in entry_files:
-        with open(path) as f:
-            entry = yaml.safe_load(f)
+        try:
+            with open(path, encoding="utf-8") as f:
+                entry = yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            print(f"ERROR: {path.name} contains invalid YAML: {e}")
+            return 1
+        except OSError as e:
+            print(f"ERROR: cannot read {path.name}: {e}")
+            return 1
+
         if not isinstance(entry, dict):
-            print(f"WARNING: {path.name} did not parse as a dict — skipping")
-            continue
-        # Ensure required fields
+            print(
+                f"ERROR: {path.name} did not parse as a YAML mapping — skipping is not safe"
+            )
+            return 1
+
+        # Validate required fields
         for field in ("version", "date", "type", "summary"):
             if field not in entry:
                 print(f"ERROR: {path.name} missing required field '{field}'")
                 return 1
+
+        # Validate version string format
+        version_str = str(entry["version"])
+        if not _VERSION_RE.match(version_str):
+            print(f"ERROR: {path.name} has invalid version string: {version_str!r}")
+            return 1
+
+        # Validate change type
+        change_type = entry["type"]
+        if change_type not in VALID_CHANGE_TYPES:
+            print(
+                f"ERROR: {path.name} has unknown type {change_type!r}. "
+                f"Valid types: {sorted(VALID_CHANGE_TYPES)}"
+            )
+            return 1
+
         # Normalise optional fields
         entry.setdefault("affected_configs", [])
         entry.setdefault("downstream_action_required", False)
@@ -63,9 +105,11 @@ def main() -> int:
     entries.sort(key=lambda e: (str(e["date"]), str(e["version"])))
 
     document = {"schema_version": 1, "entries": entries}
-    yaml_text = yaml.dump(document, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    yaml_text = yaml.dump(
+        document, default_flow_style=False, allow_unicode=True, sort_keys=False
+    )
 
-    OUTPUT.write_text(HEADER + yaml_text)
+    OUTPUT.write_text(HEADER + yaml_text, encoding="utf-8")
     print(f"Wrote {len(entries)} entries to {OUTPUT.relative_to(REPO_ROOT)}")
     return 0
 

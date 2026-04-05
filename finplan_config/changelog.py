@@ -34,11 +34,35 @@ _CHANGES_LOG_PATH = Path(__file__).parent.parent / "changes_log.yaml"
 _SEVERITY_ORDER = ["feat", "fix", "data", "security", "breaking"]
 
 
+_MAX_VERSION_LEN = 50
+
+
+def _pad_parts(
+    a: tuple[int, ...], b: tuple[int, ...]
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    """Pad the shorter tuple with trailing zeros so comparisons are length-neutral.
+
+    Without this, ``(2024, 1) < (2024, 1, 0)`` would return ``True`` in Python
+    because shorter tuples sort before longer ones when all common elements are
+    equal — breaking CalVer equivalence like ``"2024.1" == "2024.1.0"``.
+    """
+    n = max(len(a), len(b))
+    return a + (0,) * (n - len(a)), b + (0,) * (n - len(b))
+
+
 @total_ordering
 class _Version:
-    """Minimal semantic-ish version comparator for CalVer (YYYY.N.0) strings."""
+    """Minimal semantic-ish version comparator for CalVer (YYYY.N.0) strings.
+
+    ``"2024.1"`` and ``"2024.1.0"`` compare equal; ``"2024.1.1" > "2024.1.0"``.
+    """
 
     def __init__(self, version_str: str) -> None:
+        if len(version_str) > _MAX_VERSION_LEN:
+            raise ValueError(
+                f"Version string is too long ({len(version_str)} chars, max {_MAX_VERSION_LEN}): "
+                f"{version_str[:20]!r}..."
+            )
         self._str = version_str
         try:
             self._parts = tuple(int(x) for x in version_str.split("."))
@@ -48,22 +72,33 @@ class _Version:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _Version):
             return NotImplemented
-        return self._parts == other._parts
+        a, b = _pad_parts(self._parts, other._parts)
+        return a == b
 
     def __lt__(self, other: _Version) -> bool:
-        return self._parts < other._parts
+        a, b = _pad_parts(self._parts, other._parts)
+        return a < b
 
     def __repr__(self) -> str:
         return f"_Version({self._str!r})"
 
 
 def _load_log() -> list[dict]:
-    """Load and return the list of entries from changes_log.yaml."""
+    """Load and return the list of entries from changes_log.yaml.
+
+    Returns an empty list (never raises) if the file is missing, unreadable,
+    or contains invalid YAML — so downstream service startup checks degrade
+    gracefully rather than crashing the process.
+    """
     if not _CHANGES_LOG_PATH.exists():
         logger.warning("changes_log.yaml not found at %s", _CHANGES_LOG_PATH)
         return []
-    with open(_CHANGES_LOG_PATH) as f:
-        data = yaml.safe_load(f)
+    try:
+        with open(_CHANGES_LOG_PATH, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except (yaml.YAMLError, OSError) as exc:
+        logger.warning("changes_log.yaml could not be parsed: %s", exc)
+        return []
     if not isinstance(data, dict) or "entries" not in data:
         logger.warning("changes_log.yaml has unexpected structure")
         return []

@@ -2,6 +2,12 @@
 # Source: IRS Publication 590-B, Table III
 # Updated per SECURE 2.0 Act / final regulations effective 2022+
 
+_metadata:
+  source: "IRS Publication 590-B, Table III (SECURE 2.0 final regulations)"
+  date_published: "2022-01-01"
+  entered_by: "team@finplan.com"
+  last_verified: "2026-04-04"
+
 uniform_lifetime_table:
   72: 27.4
   73: 26.5

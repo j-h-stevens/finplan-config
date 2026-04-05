@@ -12,6 +12,7 @@ env:
 jobs:
   # ─────────────────────────────────────────────────────────────────
   # Stage 1: Validate YAML configuration files + changelog enforcement
+  #          + full test suite
   # ─────────────────────────────────────────────────────────────────
   validate:
     name: Validate Config
@@ -40,6 +41,9 @@ jobs:
           print('✓ All YAML files validated successfully')
           "
 
+      - name: Quality checks
+        run: bash scripts/run_checks.sh
+
       - name: Check changelog updated (PR only)
         if: github.event_name == 'pull_request'
         run: python scripts/check_changelog_updated.py
@@ -64,76 +68,3 @@ jobs:
       - run: uv sync --frozen --extra dev
       - run: uv run ruff check . --output-format=github
       - run: uv run ruff format --check .
-
-  # ─────────────────────────────────────────────────────────────────
-  # Stage 3: Tests (Python 3.12 + 3.13)
-  # ─────────────────────────────────────────────────────────────────
-  test:
-    name: Tests (Python ${{ matrix.python-version }})
-    needs: [validate, lint]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.12", "3.13"]
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5.3.1
-        with:
-          python-version: ${{ matrix.python-version }}
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - run: uv sync --frozen --extra dev
-
-      - name: Run tests with coverage
-        run: |
-          uv run pytest tests/ \
-            -v --tb=short \
-            --cov=finplan_config \
-            --cov-report=xml \
-            --cov-report=term
-
-      - name: Upload coverage
-        if: always()
-        uses: codecov/codecov-action@13afa45a3c30746b769ddb0ee18e7ac89fdb3e45 # v4.6.0
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-
-  # ─────────────────────────────────────────────────────────────────
-  # Stage 4: Publish to PyPI via OIDC trusted publishing (main only)
-  #
-  # Requires a PyPI trusted publisher configured for this repo:
-  #   https://docs.pypi.org/trusted-publishers/adding-a-publisher/
-  # No PYPI_TOKEN secret needed — GitHub issues a short-lived OIDC token.
-  # ─────────────────────────────────────────────────────────────────
-  publish:
-    name: Publish to PyPI
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write  # required for OIDC trusted publishing
-    environment:
-      name: release
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5.3.1
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - run: uv sync --frozen --extra dev
-
-      - name: Build distribution
-        run: uv build
-
-      - name: Publish to PyPI (OIDC)
-        run: uv publish --trusted-publishing always

@@ -1,0 +1,20 @@
+version: "2024.3.0"
+date: "2026-04-05"
+type: security
+affected_configs:
+  - tax_years/2024/federal_brackets.yaml
+  - tax_years/2024/irs_limits.yaml
+  - tax_years/2024/rmd_tables.yaml
+  - tax_years/2024/state_tax.yaml
+summary: >
+  Security audit follow-up: add _metadata blocks (IRS source, date_published,
+  last_verified) to all 2024 tax year YAML files for compliance audit trail.
+  Fix CalVer version comparator, add plan_defaults validation, enforce UTF-8
+  encoding on all file opens, add TypeError guard on year parameter,
+  stale-config UserWarning, available_tax_years(), config_manifest() API,
+  and 36 new tests (88 total).
+downstream_action_required: false
+notes: >
+  No values changed — only _metadata annotation blocks added. ConfigRegistry
+  now emits UserWarning on initialize() when bundled tax year < current year.
+  irs_limits(year=2024.5) now raises TypeError instead of silently coercing.

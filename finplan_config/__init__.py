@@ -9,9 +9,13 @@ variable.
 
 from __future__ import annotations
 
+import datetime
+import hashlib
+import json
 import logging
 import os
 import threading
+import warnings
 from pathlib import Path
 from typing import ClassVar
 
@@ -31,6 +35,16 @@ _REQUIRED_SUBDIRS = ("tax_years", "capital_market")
 # before they silently fall back to the default year.
 _MIN_VALID_YEAR = 1990
 _MAX_VALID_YEAR = 2100
+
+
+def _get_package_version() -> str:
+    """Return the installed package version string, or 'unknown'."""
+    try:
+        from importlib.metadata import version
+
+        return version("finplan-config")
+    except Exception:
+        return "unknown"
 
 
 def _validated_config_dir(path: Path) -> Path:
@@ -62,13 +76,42 @@ def _validated_config_dir(path: Path) -> Path:
     return resolved
 
 
+def _warn_if_stale(config_dir: Path) -> None:
+    """Emit a UserWarning if the latest bundled tax year is behind the current year.
+
+    Financial planning platforms must use current-year IRS limits. A stale
+    package silently returns wrong values for any request that falls back to
+    the newest available year.
+    """
+    current_year = datetime.date.today().year
+    tax_dir = config_dir / "tax_years"
+    try:
+        available = [
+            int(d.name) for d in tax_dir.iterdir() if d.is_dir() and d.name.isdigit()
+        ]
+    except OSError:
+        return
+    if not available:
+        return
+    latest = max(available)
+    if current_year > latest:
+        warnings.warn(
+            f"finplan-config: stale config — latest bundled tax year is {latest} "
+            f"but the current year is {current_year}. "
+            f"Requests for {current_year} will silently fall back to {latest} rules. "
+            f"Upgrade finplan-config to get current-year IRS data.",
+            UserWarning,
+            stacklevel=4,
+        )
+
+
 # Sentinel so we don't confuse "not loaded" with "loaded but empty"
 _NOT_LOADED = object()
 
 
 def _yaml_load(path: Path) -> dict:
     """Load a single YAML file and return a dict."""
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -151,6 +194,7 @@ class ConfigRegistry:
         instance = cls(config_dir, default_year)
         if validate:
             validate_all(config_dir, default_year)
+        _warn_if_stale(config_dir)
         # Assign without acquiring _lock: callers that need thread safety (get())
         # already hold the lock before calling initialize().  Explicit direct calls
         # to initialize() are expected to run before concurrent access begins.
@@ -183,12 +227,13 @@ class ConfigRegistry:
     def _resolve_year(self, year: int | None) -> int:
         """Return the requested year, or the default year.
 
-        Raises ``ValueError`` for years outside the supported range
-        ``[_MIN_VALID_YEAR, _MAX_VALID_YEAR]`` to surface obviously wrong inputs
-        early rather than silently falling back to the default year.
+        Raises ``TypeError`` if ``year`` is not an ``int`` or ``None``.
+        Raises ``ValueError`` for years outside ``[_MIN_VALID_YEAR, _MAX_VALID_YEAR]``.
         """
         if year is None:
             return self._default_year
+        if not isinstance(year, int):
+            raise TypeError(f"year must be an int or None, got {type(year).__name__!r}")
         if not (_MIN_VALID_YEAR <= year <= _MAX_VALID_YEAR):
             raise ValueError(
                 f"Tax year {year} is outside the supported range "
@@ -211,6 +256,31 @@ class ConfigRegistry:
         raise FileNotFoundError(
             f"No config found for tax year {year} or default {self._default_year}"
         )
+
+    # ------------------------------------------------------------------
+    # Available years
+    # ------------------------------------------------------------------
+
+    def available_tax_years(self) -> list[int]:
+        """Return a sorted list of tax years that have bundled configuration.
+
+        Downstream services should call this at startup to verify the current
+        calendar year is covered::
+
+            import datetime
+            cr = ConfigRegistry.get()
+            if datetime.date.today().year not in cr.available_tax_years():
+                raise RuntimeError("finplan-config has no data for current year")
+        """
+        tax_dir = self._config_dir / "tax_years"
+        try:
+            return sorted(
+                int(d.name)
+                for d in tax_dir.iterdir()
+                if d.is_dir() and d.name.isdigit()
+            )
+        except OSError:
+            return []
 
     # ------------------------------------------------------------------
     # IRS limits
@@ -277,6 +347,8 @@ class ConfigRegistry:
             raw = _yaml_load(path)
             result = {}
             for code, entry in raw.items():
+                if code.startswith("_"):
+                    continue  # skip _metadata and other internal keys
                 result[code] = _state_tax_tuple(entry)
             self._state_tax_cache[yr] = result
         return self._state_tax_cache[yr]
@@ -336,3 +408,46 @@ class ConfigRegistry:
             path = self._config_dir / "plan_defaults.yaml"
             self._plan_defaults_cache = _yaml_load(path)
         return self._plan_defaults_cache
+
+    # ------------------------------------------------------------------
+    # Config manifest (audit trail)
+    # ------------------------------------------------------------------
+
+    def config_manifest(self, year: int | None = None) -> dict:
+        """Return a deterministic fingerprint of all config used for this tax year.
+
+        Include this in stored plan results so every calculation can be traced
+        back to the exact config version that produced it — required for
+        compliance audits and customer dispute resolution.
+
+        Example::
+
+            result = {
+                "plan_id": "...",
+                "projection": [...],
+                "config_manifest": ConfigRegistry.get().config_manifest(year=2024),
+            }
+
+        Returns a dict with keys:
+            - ``tax_year``: the resolved tax year
+            - ``config_hash``: first 16 hex chars of SHA-256 of all config data
+            - ``package_version``: installed ``finplan-config`` version
+            - ``generated_at``: ISO 8601 UTC timestamp
+        """
+        yr = self._resolve_year(year)
+        data = {
+            "tax_year": yr,
+            "irs_limits": self.irs_limits(yr),
+            "federal_brackets": self.federal_brackets(yr),
+            "rmd_table": {str(k): v for k, v in self.rmd_table(yr).items()},
+        }
+        blob = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
+        config_hash = hashlib.sha256(blob).hexdigest()[:16]
+        return {
+            "tax_year": yr,
+            "config_hash": config_hash,
+            "package_version": _get_package_version(),
+            "generated_at": datetime.datetime.now(datetime.timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z"),
+        }
