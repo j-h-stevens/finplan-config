@@ -41,8 +41,8 @@ jobs:
           print('✓ All YAML files validated successfully')
           "
 
-      - name: Run tests
-        run: python -m pytest tests/ -v --tb=short --cov=finplan_config --cov-report=xml
+      - name: Quality checks
+        run: bash scripts/run_checks.sh
 
       - name: Upload coverage
         if: always()
