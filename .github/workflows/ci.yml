@@ -85,6 +85,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --extra dev
 
+      - name: Verify pytest installed
+        run: python -c "import pytest; print('pytest', pytest.__version__)"
+
       - name: Run tests with coverage
         run: |
           python -m pytest tests/ \
