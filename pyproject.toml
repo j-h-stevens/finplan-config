@@ -8,7 +8,7 @@ version = "2024.1.0"
 description = "Shared configuration for finplan services (tax brackets, IRS limits, capital market assumptions)"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Proprietary" }
+license = "LicenseRef-Proprietary"
 authors = [{ name = "finplan team", email = "team@finplan.com" }]
 dependencies = [
     "pyyaml>=6.0",
@@ -26,3 +26,5 @@ include = ["finplan_config*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
