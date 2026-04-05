@@ -87,7 +87,14 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - run: uv sync --frozen --extra dev
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev
+
+      - name: Debug environment
+        run: |
+          echo "Python: $(uv run python --version)"
+          echo "PYTHONWARNINGS=${PYTHONWARNINGS:-<unset>}"
+          uv run python -c "import warnings; print('filters:', warnings.filters[:3])"
 
       - name: Run tests with coverage
         run: |
