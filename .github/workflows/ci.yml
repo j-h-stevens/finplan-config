@@ -74,8 +74,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # Override any runner-level PYTHONWARNINGS=error that would convert
-    # expected UserWarnings (e.g. stale-config) to exceptions.
     env:
       PYTHONWARNINGS: default
     strategy:
@@ -85,11 +83,13 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5.3.1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+
+      - name: Install uv
+        run: pip install uv
 
       - name: Install dependencies
         run: uv sync --extra dev
